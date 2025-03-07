@@ -9,6 +9,8 @@ module.exports = {
           '@assets': './src/assets',
           '@routes': './src/routes',
           '@screens': './src/screens',
+          '@constants': './src/constants',
+          '@utils': './src/utils',
         },
       },
     ],

@@ -9,15 +9,18 @@ import React from 'react';
 import {StatusBar, useColorScheme} from 'react-native';
 
 import RootNavigation from './src/routes/RootNavigation';
+import Toast from 'react-native-toast-message';
+import {Provider} from 'react-redux';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
 
   return (
-    <>
+    <Provider store={store}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <RootNavigation />
-    </>
+      <Toast />
+    </Provider>
   );
 }
 

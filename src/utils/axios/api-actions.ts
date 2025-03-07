@@ -1,6 +1,19 @@
 /* eslint-disable prettier/prettier */
 
+import {instance} from './api-instance';
 import {publicInstance} from './public-api-instance';
+
+//app api actions
+export async function postAPI(url: any, payload: any) {
+  try {
+    const result = await instance.post(url, payload);
+    return result;
+  } catch (err: any) {
+    if (err.response) {
+      return err.response;
+    }
+  }
+}
 
 //public api actions
 export async function postPublicAPI(url: any, payload: any) {
