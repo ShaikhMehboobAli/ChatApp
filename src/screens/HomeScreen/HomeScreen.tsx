@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   SafeAreaView,
   Text,
   TextInput,
@@ -16,17 +17,19 @@ import {FontFamily} from '@constants/font-family';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {showErrorToast} from '@utils/toaster/Alerts';
 import {loginUser} from '@utils/apis/PostApiCall';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
+import {fetchRoomList} from '@utils/redux/actions/authActions';
 
-const LoginScreen = () => {
-  console.log('SplashScreen');
+const HomeScreen = () => {
+  //   console.log('SplashScreen');
   const [name, setName] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const inputRef = useRef<TextInput>(null);
   const dispatch = useDispatch();
+  const {roomList} = useSelector(({auth}) => auth);
 
   useEffect(() => {
-    inputRef.current?.focus();
+    dispatch(fetchRoomList());
   }, []);
 
   const handleLogin = () => {
@@ -57,21 +60,12 @@ const LoginScreen = () => {
           }}>
           <Images.LoginLogo />
         </View>
-        <Text style={[styles.logoText]}>Login </Text>
-        <Text style={[styles.descText, styles.textInput]}>
-          Enter to your account by just typing your name. {'\n'}No more hassale
-          for creating account
-        </Text>
-      </View>
-      <View style={{flex: 1, marginHorizontal: 10, marginTop: 15}}>
-        <Text style={[styles.descText]}>Name</Text>
-        <TextInput
-          ref={inputRef}
-          value={name}
-          onChangeText={setName}
-          style={styles.inputBox}
-          placeholder="Enter your name"
-          placeholderTextColor={'#a8a8a8'}
+        <Text style={[styles.logoText]}>HomeScreen </Text>
+        <FlatList
+          data={roomList}
+          renderItem={({item}) => (
+            <Text style={{color: 'black'}}>{item.name}</Text>
+          )}
         />
       </View>
 
@@ -80,7 +74,7 @@ const LoginScreen = () => {
           disabled={loading}
           style={styles.btn}
           onPress={() => {
-            handleLogin();
+            dispatch(fetchRoomList());
           }}>
           {loading ? (
             <ActivityIndicator size={'large'} color={'#fff'} />
@@ -93,4 +87,4 @@ const LoginScreen = () => {
   );
 };
 
-export default LoginScreen;
+export default HomeScreen;

@@ -1,0 +1,7 @@
+/* SIGNIN */
+export const SIGNIN_LOADING = 'SIGNIN_LOADING';
+export const SIGNIN_DATA = 'SIGNIN_DATA';
+
+export const TOKEN_REQUEST_SENT = 'TOKEN_REQUEST_SENT';
+export const ROOM_LIST = 'ROOM_LIST';
+export const ROOM_LIST_LOADING = 'ROOM_LIST_LOADING';

@@ -11,20 +11,20 @@ export const instance = axios.create({
   headers: HEADERS,
 });
 
-instance.interceptors.request.use(
-  async config => {
-    const token = await fetchFromEncryptedStorage(identifiers.accessToken);
-    console.log('token---', token);
-    if (token) {
-      config.headers.Authorization = `Bearer ${JSON.parse(token)}`;
-    }
-    if (config.data instanceof FormData) {
-      config.headers['Content-Type'] = 'multipart/form-data';
-    }
-    return config;
-  },
-  error => Promise.reject(error),
-);
+// instance.interceptors.request.use(
+//   async config => {
+//     // const token = await fetchFromEncryptedStorage(identifiers.accessToken);
+//     // console.log('token---', token);
+//     // if (token) {
+//     //   config.headers.Authorization = `Bearer ${JSON.parse(token)}`;
+//     // }
+//     // if (config.data instanceof FormData) {
+//     //   config.headers['Content-Type'] = 'multipart/form-data';
+//     // }
+//     return config;
+//   },
+//   error => Promise.reject(error),
+// );
 
 instance.interceptors.response.use(res => {
   console.log('res inter---', res.status);

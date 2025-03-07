@@ -15,6 +15,19 @@ export async function postAPI(url: any, payload: any) {
   }
 }
 
+export async function getAPI(url: any, params?: any) {
+  try {
+    const result = await instance.get(url, {params: params || {}});
+    // console.log('getAPI-response', result);
+
+    return result;
+  } catch (err: any) {
+    if (err.response) {
+      return err.response;
+    }
+  }
+}
+
 //public api actions
 export async function postPublicAPI(url: any, payload: any) {
   try {
