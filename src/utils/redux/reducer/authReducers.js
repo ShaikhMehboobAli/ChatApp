@@ -1,10 +1,21 @@
-import {TOKEN_REQUEST_SENT, SIGNIN_DATA, ROOM_LIST} from '../types';
+import {
+  TOKEN_REQUEST_SENT,
+  SIGNIN_DATA,
+  ROOM_LIST,
+  MESSAGE_LIST,
+  MESSAGE_LIST_LOADING,
+  ROOM_LIST_LOADING,
+  RESET_FLAGS,
+} from '../types';
 
 const initialState = {
   tokenLoading: false,
   userId: '',
   userDetail: {},
   roomList: [],
+  messageList: [],
+  roomListLoading: false,
+  messageListLoading: false,
   flags: {
     locationDetailSuccess: false,
   },
@@ -34,6 +45,30 @@ export default function (state = initialState, action) {
         roomList: action.data,
       };
 
+    case ROOM_LIST_LOADING:
+      return {
+        ...state,
+        roomListLoading: action.data,
+      };
+
+    case MESSAGE_LIST:
+      return {
+        ...state,
+        messageList: action.data,
+      };
+
+    case MESSAGE_LIST_LOADING:
+      return {
+        ...state,
+        messageListLoading: action.data,
+      };
+    case RESET_FLAGS:
+      return {
+        ...state,
+
+        errors: initialState.errors,
+        flags: initialState.flags,
+      };
     default:
       return state;
   }

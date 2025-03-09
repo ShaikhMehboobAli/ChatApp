@@ -5,3 +5,8 @@ export const SIGNIN_DATA = 'SIGNIN_DATA';
 export const TOKEN_REQUEST_SENT = 'TOKEN_REQUEST_SENT';
 export const ROOM_LIST = 'ROOM_LIST';
 export const ROOM_LIST_LOADING = 'ROOM_LIST_LOADING';
+
+export const MESSAGE_LIST = 'MESSAGE_LIST';
+export const MESSAGE_LIST_LOADING = 'MESSAGE_LIST_LOADING';
+
+export const RESET_FLAGS = 'RESET_FLAGS';

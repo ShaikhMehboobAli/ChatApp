@@ -11,7 +11,7 @@ const showErrorToast = title => {
 const showSuccessToast = title => {
   return Toast.show({
     type: 'success',
-    text1: 'Success',
+    text1: title?.subTitle || 'Success',
     text2: title?.message,
   });
 };

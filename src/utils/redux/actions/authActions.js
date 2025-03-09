@@ -65,7 +65,6 @@ export const isAuthenticated = () => async dispatch => {
   });
 
   try {
-    // Check all required auth items
     const userDetail = await fetchFromEncryptedStorage(
       identifiers.loginUserDetails,
     );
@@ -75,6 +74,10 @@ export const isAuthenticated = () => async dispatch => {
     if (!token || !userDetail) {
       console.log('Missing required auth data');
       await logout()(dispatch);
+      dispatch({
+        type: StoreTypes.TOKEN_REQUEST_SENT,
+        tokenLoading: false,
+      });
       return;
     }
 
@@ -82,14 +85,12 @@ export const isAuthenticated = () => async dispatch => {
       const parsedToken = JSON.parse(token);
       const parsedUserDetail = JSON.parse(userDetail);
 
-      // Verify auth state is valid
       if (!parsedToken || !parsedUserDetail) {
         console.log('Auth state not authenticated');
         await logout()(dispatch);
         return;
       }
       console.log('parsedToken0000', parsedUserDetail.username);
-      // Update Redux state with valid auth data
       dispatch({
         type: StoreTypes.SIGNIN_DATA,
         data: parsedUserDetail,
@@ -98,8 +99,6 @@ export const isAuthenticated = () => async dispatch => {
         type: StoreTypes.TOKEN_REQUEST_SENT,
         tokenLoading: false,
       });
-
-      //   dispatch(showProcessing());
     } catch (parseError) {
       dispatch({
         type: StoreTypes.TOKEN_REQUEST_SENT,
@@ -119,51 +118,91 @@ export const isAuthenticated = () => async dispatch => {
   }
 };
 
-export const fetchRoomList = () => async dispatch => {
-  dispatch(showProcessing(true));
+export const fetchRoomList = e => async dispatch => {
+  if (e === 'loader') {
+    dispatch(showProcessing(true));
+    dispatch({
+      type: StoreTypes.ROOM_LIST_LOADING,
+      data: true,
+    });
+  }
 
   try {
     const response = await axios.get(URLS.publicUrl + 'rooms', {});
-    console.log('response room---', response?.data);
+    // console.log('response room---', response?.data);
 
     if (response.status === 200 || response.status === 201) {
       dispatch({
         type: StoreTypes.ROOM_LIST,
         data: response.data,
       });
+      if (e === 'loader') {
+        dispatch({
+          type: StoreTypes.ROOM_LIST_LOADING,
+          data: false,
+        });
+      }
     } else {
       showErrorToast({message: response.data.detail[0].msg});
+      if (e === 'loader') {
+        dispatch({
+          type: StoreTypes.ROOM_LIST_LOADING,
+          data: false,
+        });
+      }
     }
-
-    // if (response.status === 200) {
-    //   const token = response?.data?.token;
-    //   const userData = response?.data;
-    // } else {
-    //   dispatch({
-    //     type: SIGNIN_LOADING,
-    //     signInLoading: false,
-    //   });
-    //   dispatch({
-    //     type: EMAIL_VERIFICATION_LOADING,
-    //     emailVerificationLoading: false,
-    //   });
-    //   dispatch(showProcessing(false));
-    //   showErrorToast({message: 'Invalid verification response'});
-    //   return {success: false};
-    // }
   } catch (err) {
-    console.error('OTP verification errr:', err?.response?.data);
-    dispatch(showProcessing(false));
-    // dispatch({
-    //   type: SIGNIN_LOADING,
-    //   signInLoading: false,
-    // });
-    // dispatch({
-    //   type: EMAIL_VERIFICATION_LOADING,
-    //   emailVerificationLoading: false,
-    // });
-    // showErrorToast(err);
-    showErrorToast({message: err});
+    console.error('room list errr:', err);
+    // dispatch(showProcessing(false));
+
+    dispatch({
+      type: StoreTypes.ROOM_LIST_LOADING,
+      data: false,
+    });
+    // showErrorToast({message: err});
+
+    return {success: false};
+  }
+};
+
+export const fetchMessageList = id => async dispatch => {
+  dispatch(showProcessing(true));
+
+  dispatch({
+    type: StoreTypes.MESSAGE_LIST_LOADING,
+    data: true,
+  });
+  try {
+    const response = await axios.get(
+      URLS.publicUrl + 'rooms/' + id + '/messages',
+      {},
+    );
+    // console.log('response room---', response?.data);
+
+    if (response.status === 200 || response.status === 201) {
+      dispatch({
+        type: StoreTypes.MESSAGE_LIST,
+        data: response.data,
+      });
+      dispatch({
+        type: StoreTypes.MESSAGE_LIST_LOADING,
+        data: false,
+      });
+    } else {
+      dispatch({
+        type: StoreTypes.MESSAGE_LIST_LOADING,
+        data: false,
+      });
+      showErrorToast({message: response.data.detail[0].msg});
+    }
+  } catch (err) {
+    console.error('message fetch errr:', err);
+    dispatch({
+      type: StoreTypes.MESSAGE_LIST_LOADING,
+      data: false,
+    });
+
+    // showErrorToast({message: 'Could not fetch message'});
     return {success: false};
   }
 };

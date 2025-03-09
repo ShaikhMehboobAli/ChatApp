@@ -33,6 +33,8 @@ const LoginScreen = () => {
     if (name.trim() === '') {
       showErrorToast({message: 'Please Enter Name'});
       return;
+    } else if (name.trim().length < 3) {
+      showErrorToast({message: 'Name must be at least 3 character'});
     }
     setLoading(true);
     const payload = {

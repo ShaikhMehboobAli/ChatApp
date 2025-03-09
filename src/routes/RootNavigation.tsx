@@ -11,6 +11,7 @@ import HomeScreen from '@screens/HomeScreen';
 import {isAuthenticated} from '@utils/redux/actions/authActions';
 import Loader from '../components/Loader';
 import {AppDispatch} from '@utils/redux';
+import ChatRoom from '@screens/ChatRoom';
 
 const RootStack = createNativeStackNavigator();
 type RootNavigationProps = {};
@@ -29,6 +30,7 @@ const RootNavigation: FC<RootNavigationProps> = () => {
     return (
       <NavigationContainer ref={navigationRef}>
         <RootStack.Navigator
+          id={undefined}
           initialRouteName={token ? routes.HomeScreen : routes.LoginScreen}
           // screenOptions={screenOptions}
         >
@@ -52,6 +54,13 @@ const RootNavigation: FC<RootNavigationProps> = () => {
               headerShown: false,
             }}
             component={HomeScreen}
+          />
+          <RootStack.Screen
+            name={routes.ChatRoom}
+            options={{
+              headerShown: false,
+            }}
+            component={ChatRoom}
           />
         </RootStack.Navigator>
       </NavigationContainer>

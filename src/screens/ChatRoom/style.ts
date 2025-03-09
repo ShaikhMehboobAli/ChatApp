@@ -1,5 +1,8 @@
 import {FontFamily} from '@constants/font-family';
 import {StyleSheet} from 'react-native';
+// import {lightTheme} from '../../utils/styles/theme';
+// import {ThemeColors} from '../../utils/theme-hook/useThemeColors';
+// import {FontFamily} from '../../utils/constants/font-family';
 
 export const styles = StyleSheet.create({
   container: {
@@ -9,26 +12,12 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   middleContainer: {
-    // flex: 1,
+    flex: 1,
     // alignItems: 'center',
     // justifyContent: 'center',
     marginHorizontal: 10,
   },
-  footerContainer: {
-    alignItems: 'center',
-    // paddingBottom: 20,
-    marginHorizontal: 10,
-    borderRadius: 5,
-    // justifyContent: 'center',
-    gap: 5,
-    marginBottom: 20,
-    flex: 1,
-  },
-  logoText: {
-    fontFamily: FontFamily.bold,
-    fontSize: 24,
-    color: '#000',
-  },
+
   btn: {
     height: 70,
     width: 70,
@@ -64,42 +53,23 @@ export const styles = StyleSheet.create({
     color: '#000',
     marginVertical: 5,
   },
-  userInfoMainContainer: {
+
+  subContainer: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 15,
+    alignItems: 'center',
+    marginTop: 20,
+    paddingBottom: 10,
   },
-  userInfoContainer: {
-    justifyContent: 'center',
+  subContainerBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  userInfo: {
-    fontSize: 14,
+  roomText: {
+    color: 'black',
+    fontSize: 16,
     fontFamily: FontFamily.semiBold,
-    color: '#000',
+    marginLeft: 10,
     textTransform: 'capitalize',
   },
-  userInfoSub: {
-    fontSize: 17,
-    fontFamily: FontFamily.semiBold,
-    color: '#000',
-  },
-  searchBarContainer: {
-    flexDirection: 'row',
-    borderWidth: 0.6,
-    borderRadius: 5,
-    alignItems: 'center',
-    backgroundColor: '#f0f1f2',
-    height: 38,
-  },
-  searchBar: {flex: 1, marginLeft: 5, color: '#000'},
-  cardContainer: {
-    padding: 5,
-    minHeight: 50,
-    backgroundColor: '#f2f5f3',
-    marginVertical: 2,
-    borderWidth: 0.5,
-    borderColor: '#c9c9c9',
-    borderRadius: 5,
-  },
-  emptyText: {textAlign: 'center', marginTop: 20, fontSize: 16, color: '#666'},
 });
