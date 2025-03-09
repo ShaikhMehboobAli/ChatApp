@@ -1,33 +1,17 @@
 /* eslint-disable prettier/prettier */
 import axios from 'axios';
-import {identifiers, routes, URLS} from '../constants';
+import {routes, URLS} from '../constants';
 import {HEADERS, TIMEOUT} from './app-setting';
-import {navigate} from '@utils/navigation';
-import {fetchFromEncryptedStorage} from '@utils/storage/storage';
+import {navigate, resetToScreen} from '@utils/navigation';
+import {showErrorToast} from '@utils/toaster/Alerts';
 
-export const instance = axios.create({
+const instance = axios.create({
   baseURL: URLS.publicUrl,
   timeout: TIMEOUT,
   headers: HEADERS,
 });
 
-// instance.interceptors.request.use(
-//   async config => {
-//     // const token = await fetchFromEncryptedStorage(identifiers.accessToken);
-//     // console.log('token---', token);
-//     // if (token) {
-//     //   config.headers.Authorization = `Bearer ${JSON.parse(token)}`;
-//     // }
-//     // if (config.data instanceof FormData) {
-//     //   config.headers['Content-Type'] = 'multipart/form-data';
-//     // }
-//     return config;
-//   },
-//   error => Promise.reject(error),
-// );
-
 instance.interceptors.response.use(res => {
-  console.log('res inter---', res.status);
   if (!res || typeof res === 'undefined') {
     return 'Server not responding!';
   }
@@ -49,7 +33,13 @@ instance.interceptors.response.use(res => {
   if (res.status == 401) {
     console.log();
     // onLogout();
+    showErrorToast({
+      message: 'Session expired! Please login again to continue.',
+    });
+    resetToScreen(routes.LoginScreen, 0, {isFromTab: true});
     return res;
   }
   return res;
 });
+
+export default instance;

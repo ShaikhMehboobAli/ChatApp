@@ -49,8 +49,9 @@ const createRoom = async (payload: any, dispatch: any): Promise<any[]> => {
       console.log('response-----------', data);
 
       if (status === 200 || status === 201) {
+        navigate(routes.ChatRoom, {id: data?.id, roomDetail: data});
         showSuccessToast({message: 'Room created success'});
-        dispatch(fetchRoomList());
+        dispatch(fetchRoomList(0, 'noLoader'));
       } else {
         console.log('errr');
         showErrorToast({
@@ -62,7 +63,7 @@ const createRoom = async (payload: any, dispatch: any): Promise<any[]> => {
       //   }
     } catch (error) {
       console.log('error create room', error);
-      showErrorToast({message: error?.response?.data?.message});
+      showErrorToast({message: error});
 
       reject(error);
     }

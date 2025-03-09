@@ -1,5 +1,7 @@
 import {FontFamily} from '@constants/font-family';
 import {createRoom} from '@utils/apis/PostApiCall';
+import {routes} from '@utils/constants';
+import {navigate} from '@utils/navigation';
 import {showErrorToast} from '@utils/toaster/Alerts';
 import React, {useEffect, useState} from 'react';
 import {
@@ -44,6 +46,8 @@ const CustomModal: React.FC<CustomModalProps> = ({setVisible, visible}) => {
     };
     createRoom(payload, dispatch)
       .then(res => {
+        console.log('helo', res);
+
         setVisible(false);
         setLoading(false);
       })

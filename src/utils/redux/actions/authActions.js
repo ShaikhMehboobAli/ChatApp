@@ -1,27 +1,15 @@
-import {
-  TOKEN_REQUEST_END,
-  SIGNUP_DATA,
-  SIGNIN_LOADING,
-  EMAIL_VERIFICATION_LOADING,
-} from '../types';
 import * as StoreTypes from '../types';
-// import Toast from 'react-native-toast-message';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-// import http from 'Config/api';
+
 import {navigationRef} from 'navigations/NavigationReadyToUse';
-// import {IS_PROCESSING_REQUEST} from 'store/reducers/systemReducer';
 import {CommonActions} from '@react-navigation/native';
 import {
   fetchFromEncryptedStorage,
   removeFromEncryptedStorage,
 } from '@utils/storage/storage';
-import {identifiers, routes, URLS} from '@utils/constants';
+import {identifiers, routes} from '@utils/constants';
 import {showErrorToast} from '@utils/toaster/Alerts';
-import {instance} from '@utils/axios/api-instance';
-import {getAPI} from '@utils/axios/api-actions';
-import axios from 'axios';
-
-// import { all, call, put, takeLatest } from "redux-saga/effects";
+import instance from '@utils/axios/api-instance';
+import {resetToScreen} from '@utils/navigation';
 
 export function showProcessing(isProcessing = false) {
   return {
@@ -31,6 +19,7 @@ export function showProcessing(isProcessing = false) {
 }
 
 export const logout = () => async dispatch => {
+  console.log('hello');
   try {
     await removeFromEncryptedStorage(identifiers.loginUserDetails);
     await removeFromEncryptedStorage(identifiers.userId);
@@ -42,12 +31,7 @@ export const logout = () => async dispatch => {
     });
     dispatch({type: StoreTypes.RESET_FLAGS});
 
-    navigationRef.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{name: routes.LoginScreen}],
-      }),
-    );
+    resetToScreen(routes.LoginScreen);
 
     return true;
   } catch (error) {
@@ -118,7 +102,7 @@ export const isAuthenticated = () => async dispatch => {
   }
 };
 
-export const fetchRoomList = e => async dispatch => {
+export const fetchRoomList = (retryCount, e) => async dispatch => {
   if (e === 'loader') {
     dispatch(showProcessing(true));
     dispatch({
@@ -128,7 +112,7 @@ export const fetchRoomList = e => async dispatch => {
   }
 
   try {
-    const response = await axios.get(URLS.publicUrl + 'rooms', {});
+    const response = await instance.get('rooms', {});
     // console.log('response room---', response?.data);
 
     if (response.status === 200 || response.status === 201) {
@@ -159,6 +143,7 @@ export const fetchRoomList = e => async dispatch => {
       type: StoreTypes.ROOM_LIST_LOADING,
       data: false,
     });
+
     // showErrorToast({message: err});
 
     return {success: false};
@@ -173,10 +158,7 @@ export const fetchMessageList = id => async dispatch => {
     data: true,
   });
   try {
-    const response = await axios.get(
-      URLS.publicUrl + 'rooms/' + id + '/messages',
-      {},
-    );
+    const response = await instance.get('rooms/' + id + '/messages', {});
     // console.log('response room---', response?.data);
 
     if (response.status === 200 || response.status === 201) {
@@ -199,6 +181,47 @@ export const fetchMessageList = id => async dispatch => {
     console.error('message fetch errr:', err);
     dispatch({
       type: StoreTypes.MESSAGE_LIST_LOADING,
+      data: false,
+    });
+
+    // showErrorToast({message: 'Could not fetch message'});
+    return {success: false};
+  }
+};
+
+export const allStats = id => async dispatch => {
+  dispatch(showProcessing(true));
+
+  dispatch({
+    type: StoreTypes.ALL_STATS_DATA_LOADING,
+    data: true,
+  });
+  try {
+    const response = await instance.get('stats', {
+      baseURL: 'https://chat-api-k4vi.onrender.com/',
+    });
+    // console.log('response room---', response?.data);
+
+    if (response.status === 200 || response.status === 201) {
+      dispatch({
+        type: StoreTypes.ALL_STATS_DATA,
+        data: response.data,
+      });
+      dispatch({
+        type: StoreTypes.ALL_STATS_DATA_LOADING,
+        data: false,
+      });
+    } else {
+      dispatch({
+        type: StoreTypes.ALL_STATS_DATA_LOADING,
+        data: false,
+      });
+      showErrorToast({message: response.data.detail[0].msg});
+    }
+  } catch (err) {
+    console.error('message fetch errr:', err);
+    dispatch({
+      type: StoreTypes.ALL_STATS_DATA_LOADING,
       data: false,
     });
 

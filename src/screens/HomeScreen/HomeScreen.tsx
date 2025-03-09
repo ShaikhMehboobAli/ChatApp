@@ -1,23 +1,21 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   FlatList,
+  RefreshControl,
   SafeAreaView,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Images} from '@assets/images';
 import {styles} from './style';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {showErrorToast} from '@utils/toaster/Alerts';
-import {loginUser} from '@utils/apis/PostApiCall';
 import {useDispatch, useSelector} from 'react-redux';
 import {fetchRoomList} from '@utils/redux/actions/authActions';
 import {CustomSvgData} from '@assets/images/svg/CustomSvg';
-import {FontFamily} from '@constants/font-family';
 
 import {format, isToday, isYesterday} from 'date-fns';
 import {navigate} from '@utils/navigation';
@@ -25,30 +23,43 @@ import {routes} from '@utils/constants';
 import CustomModal from '@components/CustomModal';
 import CountdownTimer from '@components/ExpiryCountDown';
 
-const formatTimestamp = timestamp => {
+const formatTimestamp = (timestamp: any) => {
   const date = new Date(timestamp);
 
-  if (isToday(date)) return 'Today';
-  if (isYesterday(date)) return 'Yesterday';
+  if (isToday(date)) {
+    return 'Today';
+  }
+  if (isYesterday(date)) {
+    return 'Yesterday';
+  }
 
   return format(date, 'dd, MMM yy');
 };
 
 const HomeScreen = () => {
-  //   console.log('SplashScreen');
-  const [name, setName] = useState<string>('');
   const [searchText, setSearchText] = useState<string>('');
   const dispatch = useDispatch();
   const {roomList, userDetail, roomListLoading} = useSelector(
     (state: {auth: any}) => state.auth,
   );
   const [visible, setVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const intervalRef: any = useRef(null);
 
-  const intervalRef = useRef(null);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchData('loader');
+  }, []);
+
+  useEffect(() => {
+    if (!roomListLoading && refreshing) {
+      setRefreshing(false);
+    }
+  }, [refreshing, roomListLoading]);
 
   const fetchData = useCallback(
-    e => {
-      dispatch(fetchRoomList(e));
+    (e: string) => {
+      dispatch(fetchRoomList(0, e));
     },
     [dispatch],
   );
@@ -76,36 +87,17 @@ const HomeScreen = () => {
   }, [sortedRoomList, searchText]);
 
   const renderItem = useCallback(
-    ({item}) => (
+    ({item}: any) => (
       <TouchableOpacity
         onPress={() => {
           navigate(routes.ChatRoom, {id: item.id, roomDetail: item});
         }}
         activeOpacity={0.7}
         style={styles.cardContainer}>
-        <View style={{justifyContent: 'space-between', flex: 1}}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}>
-            <Text
-              style={{
-                color: '#000',
-                fontSize: 12,
-                fontFamily: FontFamily.semiBold,
-                textTransform: 'capitalize',
-              }}>
-              {item?.name}
-            </Text>
-            <Text
-              style={{
-                color: '#000',
-                fontSize: 9,
-                fontFamily: FontFamily.light,
-                textTransform: 'lowercase',
-              }}>
+        <View style={styles.cardSubContainer}>
+          <View style={styles.cardNameContainer}>
+            <Text style={styles.cardNameTxt}>{item?.name}</Text>
+            <Text style={styles.cardCreatedAt}>
               {formatTimestamp(item?.created_at)}
             </Text>
           </View>
@@ -121,9 +113,18 @@ const HomeScreen = () => {
       <View style={[styles.middleContainer, {flex: 1}]}>
         <View style={styles.userInfoMainContainer}>
           <CustomSvgData.Logo.myLogo height={90} width={70} />
-          <View style={styles.userInfoContainer}>
-            <Text style={styles.userInfo}>Hi, {userDetail?.username}</Text>
-            <Text style={styles.userInfoSub}>Welcome Back</Text>
+          <View style={styles.welcomeContainer}>
+            <View style={styles.userInfoContainer}>
+              <Text style={styles.userInfo}>Hi, {userDetail?.username}</Text>
+              <Text style={styles.userInfoSub}>Welcome Back</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => {
+                navigate(routes.ProfileScreen);
+              }}
+              style={styles.profileIcon}>
+              <Ionicons name="person" size={20} color={'#000'} />
+            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.searchBarContainer}>
@@ -139,18 +140,11 @@ const HomeScreen = () => {
             size={28}
             color={'#000'}
             style={{
-              // padding: 5,
               paddingRight: 5,
             }}
           />
         </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: 16,
-          }}>
+        <View style={styles.chatContainer}>
           <Text style={[styles.logoText]}>Chats </Text>
           <TouchableOpacity onPress={() => setVisible(true)}>
             <Ionicons name="add-circle" size={30} color={'#26751d'} />
@@ -158,8 +152,7 @@ const HomeScreen = () => {
         </View>
         <View style={{flex: 1}}>
           {roomListLoading ? (
-            <View
-              style={{justifyContent: 'center', alignItems: 'center', flex: 1}}>
+            <View style={styles.indicatorContainer}>
               <ActivityIndicator size={'large'} />
             </View>
           ) : (
@@ -174,6 +167,9 @@ const HomeScreen = () => {
               initialNumToRender={10}
               maxToRenderPerBatch={5}
               updateCellsBatchingPeriod={100}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
             />
           )}
         </View>

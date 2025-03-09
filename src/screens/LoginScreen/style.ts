@@ -68,4 +68,10 @@ export const styles = StyleSheet.create({
     color: '#000',
     marginVertical: 5,
   },
+  logoContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: '25%',
+  },
+  nameTxt: {flex: 1, marginHorizontal: 10, marginTop: 15},
 });

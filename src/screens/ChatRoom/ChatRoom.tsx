@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -9,41 +9,53 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Images} from '@assets/images';
-import {routes} from '@utils/constants';
-import {goBack, navigate} from '@utils/navigation';
+import {goBack} from '@utils/navigation';
 import {styles} from './style';
-import {FontFamily} from '@constants/font-family';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {showErrorToast, showSuccessToast} from '@utils/toaster/Alerts';
-import {loginUser} from '@utils/apis/PostApiCall';
 import {useDispatch, useSelector} from 'react-redux';
 import {useRoute} from '@react-navigation/native';
 import {fetchMessageList} from '@utils/redux/actions/authActions';
 import {MESSAGE_LIST} from '@utils/redux/types';
 import ActiveMemberModal from '@components/ActiveMemberModal';
+import {ChatBubble} from '@components/ChatBubble';
+import {ChatPlaceHolder} from '@components/ChatPlaceHolder';
+
+const UNABLE_TO_CONNECT =
+  'Unable to connect to the chat server. Please try again later.';
+const NETWORK_ERROR =
+  'Network error: Unable to connect to the chat server. Please check your internet connection.';
+const RETRYING_WEBHOOK = 'WebSocket encountered an error. Retrying...';
+const HAS_JOINED = 'has joined the chat.';
+const MEMBER_JOINED = 'New Member joined ';
+const HAD_LEFT = 'has left the chat.';
+const MEMBER_LEFT = 'A member left ';
+const CHAR_SERVER = 'Chat server is disconnected. Please try again.';
 
 const ChatRoom = props => {
   const {params} = useRoute();
-  const id = params?.id || '';
-  const roomDetail = params?.roomDetail;
+  const id: any = params?.id || '';
+  const roomDetail: any = params?.roomDetail;
   const [sendMessage, setSendMessage] = useState<string>('');
-  const ws = useRef(null);
+  const ws: any = useRef(null);
   const dispatch = useDispatch();
   const {messageList, messageListLoading, userDetail} = useSelector(
     (state: {auth: any}) => state.auth,
   );
-  const [allMessages, setAllMessages] = useState([]);
+  const [allMessages, setAllMessages] = useState<Array<any>>([]);
   const [visible, setVisible] = useState(false);
   const [activeUser, setActiveUser] = useState([]);
-  console.log('activeUser', id, roomDetail);
+
+  let retryCount = 0;
+  const maxRetries = 5;
 
   useEffect(() => {
     joinRoom();
     return () => {
       if (ws.current) {
-        console.log('Closing WebSocket for user:');
+        // console.log('Closing WebSocket for user:');
         ws.current.close();
+        // ws.current = null;
         dispatch({
           type: MESSAGE_LIST,
           data: [],
@@ -52,22 +64,18 @@ const ChatRoom = props => {
     };
   }, [id]);
 
-  let retryCount = 0;
-  const maxRetries = 5;
-
   const connectWebSocket = id => {
     retryCount++;
 
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      console.log('WebSocket is already connected.');
+      // console.log('WebSocket is already connected.');
       return;
     }
 
     if (retryCount >= maxRetries) {
-      console.error('Max reconnection attempts reached.');
+      // console.error('Max reconnection attempts reached.');
       showErrorToast({
-        message:
-          'Unable to connect to the chat server. Please try again later.',
+        message: UNABLE_TO_CONNECT,
       });
       return;
     }
@@ -77,25 +85,32 @@ const ChatRoom = props => {
     );
 
     ws.current.onopen = () => {
-      console.log('WebSocket connection established.');
+      // console.log('WebSocket connection established.');
+      retryCount = 0;
     };
 
     ws.current.onclose = () => {
-      console.log('WebSocket connection closed.');
+      // console.log('WebSocket connection closed.');
+      retryCount++;
+      if (retryCount < maxRetries) {
+        setTimeout(() => connectWebSocket(id), 5000);
+      }
     };
 
     ws.current.onerror = error => {
-      console.error('WebSocket error:', error.message);
-      if (
-        error.message?.includes(
-          'Network error: Unable to connect to the chat server. Please check your internet connection.',
-        )
-      ) {
-        showErrorToast({message: error.message});
-        // Alert.alert("Network error: Unable to connect to the chat server. Please check your internet connection.");
+      // console.error('WebSocket error:', error.message);
+      if (error.message?.includes('Unable to resolve host')) {
+        showErrorToast({
+          message: NETWORK_ERROR,
+        });
       } else {
-        Alert.alert('WebSocket encountered an error. Retrying in 5 seconds...');
-        setTimeout(connectWebSocket, 5000); // Retry after 5 seconds
+        if (retryCount === 1) {
+          Alert.alert(RETRYING_WEBHOOK);
+        }
+        retryCount++;
+        if (retryCount < maxRetries) {
+          setTimeout(() => connectWebSocket(id), 5000);
+        }
       }
     };
 
@@ -106,46 +121,25 @@ const ChatRoom = props => {
       switch (newMessage.event) {
         case 'join': {
           if (newMessage.username !== userDetail.username) {
-            console.log(
-              `${newMessage.username} has joined the chat.`,
-              userDetail.username,
-              newMessage,
-              newMessage.username !== userDetail.username,
-            );
             showSuccessToast({
-              message: `${newMessage.username} has joined the chat.`,
-              subTitle: 'New Member joined ' + roomDetail.name,
+              message: `${newMessage.username} ${HAS_JOINED}`,
+              subTitle: MEMBER_JOINED + roomDetail.name,
             });
           }
           break;
         }
         case 'leave': {
           if (newMessage.username !== userDetail.username) {
-            console.log(
-              `${newMessage.username} has leaved the chat.`,
-              userDetail.username,
-              newMessage,
-              newMessage.username !== userDetail.username,
-            );
             showSuccessToast({
-              message: `${newMessage.username} has leave the chat.`,
-              subTitle: 'A member leave ' + roomDetail.name,
+              message: `${newMessage.username} ${HAD_LEFT}`,
+              subTitle: MEMBER_LEFT + roomDetail.name,
             });
           }
           break;
         }
         case 'message': {
-          console.log(
-            'New message:',
-            newMessage?.message?.username,
-            // newMessage?.id !== userDetail?.id,
-            // newMessage?.username,
-            // userDetail?.username,
-          );
-          if (
-            // !!newMessage?.message?.content &&
-            newMessage?.message?.username !== userDetail?.username
-          ) {
+          // console.log('New message:', newMessage?.message?.username);
+          if (newMessage?.message?.username !== userDetail?.username) {
             setAllMessages(prev => [newMessage?.message, ...prev]);
           }
           break;
@@ -161,39 +155,46 @@ const ChatRoom = props => {
   }, [messageList]);
 
   const handleSendMessage = () => {
-    if (sendMessage) {
+    if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
+      showErrorToast({
+        message: CHAR_SERVER,
+      });
+      return;
+    }
+    if (sendMessage && sendMessage.trim() !== '') {
       const newMessage = {
         id: allMessages[0]?.id + 1 || 1,
-        content: sendMessage,
+        content: sendMessage.trim(),
         event: 'message',
         username: userDetail?.username,
         user_id: userDetail?.id,
         created_at: new Date().toISOString().split('.')[0],
       };
-      ws.current.send(JSON.stringify(newMessage));
-      setAllMessages(prev => [newMessage, ...prev]);
-      console.log('message sended----', newMessage);
-      setSendMessage('');
+
+      try {
+        ws.current.send(JSON.stringify(newMessage));
+        setAllMessages(prev => [newMessage, ...prev]);
+        setSendMessage('');
+        // console.log('Message sent:', newMessage);
+      } catch (error) {
+        showErrorToast({message: 'Failed to send message. Try again.'});
+      }
     }
   };
 
   const joinRoom = async () => {
-    // setRoomId(id);
     connectWebSocket(id);
     dispatch(fetchMessageList(id));
   };
 
-  if (messageListLoading) {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size={'large'} />
-      </View>
-    );
-  }
+  const renderItem = useCallback(
+    ({item}: any) => <ChatBubble item={item} userDetail={userDetail} />,
+    [userDetail],
+  );
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: '#fff'}]}>
-      <View style={styles.subContainer}>
+      <View style={[styles.subContainer, {backgroundColor: '#ebebeb'}]}>
         <View style={styles.subContainerBox}>
           <TouchableOpacity
             style={{marginLeft: 15}}
@@ -207,141 +208,30 @@ const ChatRoom = props => {
         <TouchableOpacity
           onPress={() => setVisible(true)}
           activeOpacity={0.7}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#b3e8bc',
-            borderRadius: 100,
-            width: 40,
-            height: 40,
-            marginRight: 10,
-          }}>
-          <Text
-            style={{
-              fontSize: 15,
-              fontFamily: FontFamily.medium,
-              color: '#0f8c26',
-              marginRight: 2,
-            }}>
-            {activeUser?.length || 0}
-          </Text>
+          style={styles.activeUserBtn}>
+          <Text style={styles.activeUserTxt}>{activeUser?.length || 0}</Text>
           <Ionicons name="radio-button-on" size={13} color={'#0f8c26'} />
         </TouchableOpacity>
       </View>
       <View style={styles.middleContainer}>
-        <FlatList
-          data={allMessages}
-          inverted
-          renderItem={({item}) => (
-            <View
-              style={[
-                {
-                  //   maxWidth: '90%',
-                  display: 'flex',
-                  //   justifyContent: 'center',
-                  flexDirection: 'row',
-                },
-
-                item?.user_id !== userDetail?.id
-                  ? {
-                      alignItems: 'flex-start',
-                      paddingRight: 15,
-                    }
-                  : {
-                      // alignItems: 'flex-end',
-                      // paddingLeft: 15,
-                      marginLeft: 'auto',
-                    },
-              ]}>
-              {item?.user_id !== userDetail?.id && (
-                <View
-                  style={{
-                    height: 30,
-                    width: 30,
-                    borderRadius: 50,
-                    backgroundColor: '#6d6d6e ',
-                    marginTop: 'auto',
-                    marginBottom: 5,
-                    marginRight: 5,
-
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                  <Text style={{color: '#cacccc'}}>
-                    {item?.username[0] || '?'}
-                  </Text>
-                </View>
-              )}
-              <View
-                style={[
-                  {
-                    //
-                    backgroundColor: '#6d6d6e',
-                    marginBottom: 5,
-                    padding: 5,
-                    //   width: 'auto',
-                  },
-                  item?.user_id !== userDetail?.id
-                    ? {
-                        borderWidth: 0.6,
-                        borderTopLeftRadius: 8,
-                        borderTopRightRadius: 8,
-                        borderBottomRightRadius: 8,
-                      }
-                    : {
-                        borderWidth: 0.6,
-                        borderTopLeftRadius: 8,
-                        borderTopRightRadius: 8,
-                        borderBottomLeftRadius: 8,
-                        backgroundColor: '#147526',
-                      },
-                ]}>
-                {item?.user_id !== userDetail?.id && (
-                  <Text
-                    style={[
-                      {
-                        fontSize: 11,
-                        fontFamily: FontFamily.semiBold,
-                        color: '#cccecf',
-                        // display:'none'
-                      },
-                      item?.user_id === userDetail?.id && {display: 'none'},
-                    ]}>
-                    {item?.username || ''}
-                  </Text>
-                )}
-                <Text
-                  style={{
-                    color: '#fff',
-                    fontFamily: FontFamily.regular,
-                    fontSize: 12,
-                    lineHeight: 13,
-                    letterSpacing: 0.3,
-                    marginTop: 3,
-                  }}>
-                  {item?.content}
-                </Text>
-              </View>
-            </View>
-          )}
-        />
+        {messageListLoading ? (
+          <View style={{flex: 1}}>
+            <ChatPlaceHolder />
+          </View>
+        ) : (
+          <FlatList
+            data={allMessages}
+            inverted
+            keyExtractor={item => item?.id?.toString()}
+            renderItem={renderItem}
+          />
+        )}
       </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          borderWidth: 0.6,
-          borderRadius: 5,
-          alignItems: 'center',
-          backgroundColor: '#f0f1f2',
-          minHeight: 40,
-          marginHorizontal: 7,
-          marginBottom: 7,
-        }}>
+      <View style={styles.messageInputTextContainer}>
         <TextInput
           value={sendMessage}
           onChangeText={setSendMessage}
-          style={{flex: 1, marginLeft: 5, color: '#000', maxHeight: 60}}
+          style={styles.messageInputTxt}
           placeholder="Enter Message..."
           placeholderTextColor={'#9c9c9c'}
           multiline
@@ -353,10 +243,7 @@ const ChatRoom = props => {
             name="send"
             size={23}
             color={'#2290ab'}
-            style={{
-              // padding: 5,
-              paddingRight: 5,
-            }}
+            style={styles.icon}
           />
         )}
       </View>

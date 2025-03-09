@@ -3,4 +3,5 @@ export const routes = {
   LoginScreen: 'LoginScreen',
   HomeScreen: 'HomeScreen',
   ChatRoom: 'ChatRoom',
+  ProfileScreen: 'ProfileScreen',
 };

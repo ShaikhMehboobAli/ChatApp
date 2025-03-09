@@ -102,4 +102,41 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
   },
   emptyText: {textAlign: 'center', marginTop: 20, fontSize: 16, color: '#666'},
+  cardSubContainer: {justifyContent: 'space-between', flex: 1},
+  cardNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cardNameTxt: {
+    color: '#000',
+    fontSize: 12,
+    fontFamily: FontFamily.semiBold,
+    textTransform: 'capitalize',
+  },
+  cardCreatedAt: {
+    color: '#000',
+    fontSize: 9,
+    fontFamily: FontFamily.light,
+    textTransform: 'lowercase',
+  },
+  welcomeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flex: 1,
+  },
+  profileIcon: {
+    backgroundColor: '#eee',
+    borderRadius: 50,
+    padding: 7,
+    marginRight: 8,
+  },
+  chatContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  indicatorContainer: {justifyContent: 'center', alignItems: 'center', flex: 1},
 });
