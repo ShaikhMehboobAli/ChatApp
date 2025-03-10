@@ -209,7 +209,9 @@ const ChatRoom = props => {
           onPress={() => setVisible(true)}
           activeOpacity={0.7}
           style={styles.activeUserBtn}>
-          <Text style={styles.activeUserTxt}>{activeUser?.length || 0}</Text>
+          <Text style={styles.activeUserTxt}>
+            {[...new Set(activeUser)]?.length || 0}
+          </Text>
           <Ionicons name="radio-button-on" size={13} color={'#0f8c26'} />
         </TouchableOpacity>
       </View>
